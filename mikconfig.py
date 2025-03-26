@@ -2,15 +2,19 @@
 """
 Script: mikconfig.py
 Description: Unified MikroTik configuration generator.
-             This script offers a menu with four options:
+             This script offers a menu with six options:
 
-             wAP AX system:
-             1. CAPsMAN 2.0 config (switch config)
-             2. WAP config
+wAP AX system:
+1. CAPsMAN 2.0 config
+2. WAP config
 
-             wAP AC system upgrade:
-             3. CAPsMAN 2.0 upgrade config
-             4. WAP upgrade config
+wAP AC system upgrade:
+3. CAPsMAN 2.0 upgrade config
+4. WAP upgrade config
+
+Additional scripts:
+5. New switch (no CAPsMAN)
+6. Set identity and IP address only
 
 Usage: Run this script and choose an option from the menu.
        Follow the prompts (if applicable) and copy the output commands into the MikroTik console.
@@ -19,20 +23,13 @@ Usage: Run this script and choose an option from the menu.
 import ipaddress
 import sys
 
-def config_capsman2():
-    # Script 1: mikconfig-capsman2.py
-    print("Please enter the following information:\n")
-    identity = input("System Identity (e.g. testnet-switch0): ").strip()
-    ssid = input("SSID (e.g. testnet-wifi0): ").strip()
-    passphrase = input("Passphrase (e.g. Qaqa1234@): ").strip()
-    subnet_choice = input("Enter Subnet Information? (Y/N): ").strip().lower()
-
-    # Default values
+def get_ip_config():
+    # Helper function to prompt for IP configuration with defaults and extrapolation.
     default_ip = "10.1.27.2/24"
     default_network = "10.1.27.0"
     default_gateway = "10.1.27.1"
     default_dns = "8.8.8.8,8.8.4.4"
-
+    subnet_choice = input("Enter Subnet Information? (Y/N): ").strip().lower()
     if subnet_choice == 'y':
         ip_input = input(f"IP Address [default: {default_ip}]: ").strip()
         if not ip_input:
@@ -43,19 +40,15 @@ def config_capsman2():
             print("Invalid IP address format, using default.")
             ip_input = default_ip
             ip_intf = ipaddress.ip_interface(ip_input)
-
         # Compute network and gateway based on the provided IP address
         computed_network = str(ip_intf.network.network_address)
         computed_gateway = str(ipaddress.IPv4Address(int(ip_intf.network.network_address) + 1))
-
         network_input = input(f"Network [default: {computed_network}]: ").strip()
         if not network_input:
             network_input = computed_network
-
         gateway_input = input(f"Gateway [default: {computed_gateway}]: ").strip()
         if not gateway_input:
             gateway_input = computed_gateway
-
         dns_input = input(f"DNS [default: {default_dns}]: ").strip()
         if not dns_input:
             dns_input = default_dns
@@ -64,6 +57,15 @@ def config_capsman2():
         network_input = default_network
         gateway_input = default_gateway
         dns_input = default_dns
+    return ip_input, network_input, gateway_input, dns_input
+
+def config_capsman2():
+    # Option 1: CAPsMAN 2.0 config (switch config)
+    print("Please enter the following information:\n")
+    identity = input("System Identity (e.g. testnet-switch0): ").strip()
+    ssid = input("SSID (e.g. testnet-wifi0): ").strip()
+    passphrase = input("Passphrase (e.g. Qaqa1234@): ").strip()
+    ip_input, network_input, gateway_input, dns_input = get_ip_config()
 
     config = f"""## make sure winbox is up to date
 ## connect with winbox via MAC address, no pw
@@ -150,7 +152,7 @@ set ca-certificate=auto certificate=auto enabled=yes interfaces=all \\
     print(config)
 
 def config_wap2():
-    # Script 2: mikconfig-wap2.py
+    # Option 2: WAP config (wAP AX system)
     identity = input("System Identity (e.g. testnet-wap0): ").strip()
     config = f"""## ethernet cable goes into left port
 ## hold the reset button before connecting power (or ethernet if PoE)
@@ -170,12 +172,10 @@ def config_wap2():
 
 ## (2-3 minute wait)
 
-
 ## connect again with winbox
 ## use the default password again, do not reset
 
 ## open up console and change password for first time
-
 
 /system identity
 set name={identity}
@@ -209,7 +209,7 @@ add address=3.opnsense.pool.ntp.org
     print(config)
 
 def upgrade_cap():
-    # Script 3: mikconfig-upgradecap.py
+    # Option 3: CAPsMAN 2.0 upgrade config (wAP AC system upgrade)
     ssid = input("SSID (e.g. testnet-wifi0): ").strip()
     passphrase = input("Passphrase (e.g. Qaqa1234@): ").strip()
     config = rf"""## REMOVE ALL CAPSMAN 1.0 CONFIGURATION
@@ -250,7 +250,6 @@ add action=create-dynamic-enabled comment=5ghz disabled=no \
 add action=create-dynamic-enabled comment=2ghz disabled=no \
     master-configuration={ssid} name-format=2ghz-%I supported-bands=2ghz-n
 
-
 ## SELECT NEIGHBOR GROUP
 # gui > WiFi > Configuration > double click on wifi config
 # Steering > Neighbor Group > select dynamic-whatever from drop down menu
@@ -262,7 +261,7 @@ add action=create-dynamic-enabled comment=2ghz disabled=no \
     print(config)
 
 def upgrade_wap():
-    # Script 4: mikconfig-upgradewap.py
+    # Option 4: WAP upgrade config (wAP AC system upgrade)
     config = """## DO THROUGH GUI
 # full firmware update (automatic reboot)
 # mark wireless package for uninstall
@@ -288,6 +287,90 @@ set bridgeLocal protocol-mode=rstp priority=0x8000 port-cost-mode=long
     print("="*60 + "\n")
     print(config)
 
+def config_new_switch():
+    # Option 5: New switch (no CAPsMAN)
+    print("Please enter the following information:\n")
+    identity = input("System Identity (e.g. testnet-switch0): ").strip()
+    ip_input, network_input, gateway_input, dns_input = get_ip_config()
+    config = f"""## make sure winbox is up to date
+## connect with winbox via MAC address, no pw
+## do not set password, skip
+## in gui > files
+## drag corresponding firmware update to files (usually "arm", "arm64", or "mipsbe")
+## in gui > system > reboot (nearly 3 minutes)
+
+## if firmware update doesn't take, use system > packages to check for update. requires working internet first
+
+## open up console and change password for first time
+
+/system identity
+set name={identity}
+
+/ip address remove [find comment="defconf"]
+
+/ip dhcp-client
+add interface=bridge
+
+/system clock
+set time-zone-name=America/New_York
+
+/system note
+set show-at-login=no
+
+/system ntp client
+set enabled=yes
+
+/system ntp client servers
+add address=0.opnsense.pool.ntp.org
+add address=1.opnsense.pool.ntp.org
+add address=2.opnsense.pool.ntp.org
+add address=3.opnsense.pool.ntp.org
+
+/interface bridge
+set bridge protocol-mode=rstp priority=0x3000 port-cost-mode=long
+/interface ethernet set [find] loop-protect=yes
+
+## DOCUMENT SERIAL NUMBER
+/system routerboard print
+
+## SET STATIC IP ADDRESS
+/ip dhcp-client remove [find interface="bridge"]
+/ip address
+add address={ip_input} comment=defconf interface=bridge network={network_input}
+/ip dns
+set servers={dns_input}
+/ip route
+add disabled=no dst-address=0.0.0.0/0 gateway={gateway_input}
+"""
+    print("\n" + "="*60)
+    print("MikroTik New Switch (no CAPsMAN) config")
+    print("="*60 + "\n")
+    print(config)
+
+def config_identity_ip_only():
+    # Option 6: Set identity and IP address only
+    print("Please enter the following information:\n")
+    identity = input("System Identity (e.g. testnet-switch0): ").strip()
+    ip_input, network_input, gateway_input, dns_input = get_ip_config()
+    config = f"""## SET IDENTITY
+/system identity
+set name={identity}
+
+## SET STATIC IP ADDRESS
+/ip dhcp-client remove [find interface="bridge"]
+/ip address remove [find comment="defconf"]
+/ip address
+add address={ip_input} comment=defconf interface=bridge network={network_input}
+/ip dns
+set servers={dns_input}
+/ip route
+add disabled=no dst-address=0.0.0.0/0 gateway={gateway_input}
+"""
+    print("\n" + "="*60)
+    print("MikroTik Identity and IP Address Only config")
+    print("="*60 + "\n")
+    print(config)
+
 def main_menu():
     menu = """
 ==============================
@@ -302,7 +385,11 @@ wAP AC system upgrade:
 3. CAPsMAN 2.0 upgrade config
 4. WAP upgrade config
 
-Enter your choice (1-4): """
+Additional scripts:
+5. New switch (no CAPsMAN)
+6. Set identity and IP address only
+
+Enter your choice (1-6): """
     choice = input(menu).strip()
 
     if choice == '1':
@@ -313,6 +400,10 @@ Enter your choice (1-4): """
         upgrade_cap()
     elif choice == '4':
         upgrade_wap()
+    elif choice == '5':
+        config_new_switch()
+    elif choice == '6':
+        config_identity_ip_only()
     else:
         print("Invalid option. Exiting.")
         sys.exit(1)
