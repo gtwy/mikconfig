@@ -101,10 +101,6 @@ add address=1.opnsense.pool.ntp.org
 add address=2.opnsense.pool.ntp.org
 add address=3.opnsense.pool.ntp.org
 
-/interface bridge
-set bridge protocol-mode=rstp priority=0x3000 port-cost-mode=long
-/interface ethernet set [find] loop-protect=yes
-
 /interface wifi datapath
 add bridge=bridge client-isolation=no disabled=no name=flat_datapath
 
@@ -124,6 +120,11 @@ add action=create-dynamic-enabled comment=5ghz disabled=no identity-regexp="" \\
 add action=create-dynamic-enabled comment=2ghz disabled=no \\
     master-configuration={ssid} name-format=2ghz-%I supported-bands=\\
     2ghz-ax,2ghz-n
+
+/interface bridge
+set bridge protocol-mode=rstp priority=0x3000 port-cost-mode=long
+/interface ethernet
+set [ find ] loop-protect=on
 
 ## DOCUMENT SERIAL NUMBER
 /system routerboard print
@@ -184,10 +185,6 @@ set name={identity}
 /ip dhcp-client
 add interface=bridgeLocal
 
-/interface bridge
-set bridgeLocal protocol-mode=rstp priority=0x8000 port-cost-mode=long
-/interface ethernet set [find] loop-protect=yes
-
 /system clock
 set time-zone-name=America/New_York
 /system note
@@ -199,6 +196,11 @@ add address=0.opnsense.pool.ntp.org
 add address=1.opnsense.pool.ntp.org
 add address=2.opnsense.pool.ntp.org
 add address=3.opnsense.pool.ntp.org
+
+/interface bridge
+set bridgeLocal protocol-mode=rstp priority=0x8000 port-cost-mode=long
+/interface ethernet
+set [ find ] loop-protect=on
 
 ## DOCUMENT SERIAL NUMBER
 /system routerboard print
@@ -228,9 +230,6 @@ def upgrade_cap():
 /system reboot
 
 ## PASTE THESE COMMANDS TO COMPLETE PROVISIONING
-/interface bridge
-set bridge protocol-mode=rstp priority=0x3000 port-cost-mode=long
-/interface ethernet set [find] loop-protect=yes
 /interface wifi datapath
 add bridge=bridge client-isolation=no disabled=no name=flat_datapath
 /interface wifi configuration
@@ -249,6 +248,11 @@ add action=create-dynamic-enabled comment=5ghz disabled=no \
     5ghz-ac,5ghz-n
 add action=create-dynamic-enabled comment=2ghz disabled=no \
     master-configuration={ssid} name-format=2ghz-%I supported-bands=2ghz-n
+
+/interface bridge
+set bridge protocol-mode=rstp priority=0x3000 port-cost-mode=long
+/interface ethernet
+set [ find ] loop-protect=on
 
 ## SELECT NEIGHBOR GROUP
 # gui > WiFi > Configuration > double click on wifi config
@@ -328,7 +332,8 @@ add address=3.opnsense.pool.ntp.org
 
 /interface bridge
 set bridge protocol-mode=rstp priority=0x3000 port-cost-mode=long
-/interface ethernet set [find] loop-protect=yes
+/interface ethernet
+set [ find ] loop-protect=on
 
 ## DOCUMENT SERIAL NUMBER
 /system routerboard print
