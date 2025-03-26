@@ -99,6 +99,10 @@ add address=1.opnsense.pool.ntp.org
 add address=2.opnsense.pool.ntp.org
 add address=3.opnsense.pool.ntp.org
 
+/interface bridge
+set bridge protocol-mode=rstp priority=0x3000 port-cost-mode=long
+/interface ethernet set [find] loop-protect=yes
+
 /interface wifi datapath
 add bridge=bridge client-isolation=no disabled=no name=flat_datapath
 
@@ -182,6 +186,7 @@ add interface=bridgeLocal
 
 /interface bridge
 set bridgeLocal protocol-mode=rstp priority=0x8000 port-cost-mode=long
+/interface ethernet set [find] loop-protect=yes
 
 /system clock
 set time-zone-name=America/New_York
@@ -215,30 +220,24 @@ def upgrade_cap():
 /caps-man interface remove [find]
 /caps-man manager remove [find]
 
+## DO THROUGH GUI
+# full firmware update (automatic reboot)
+# mark wireless package for uninstall
 
-## UNINSTALL WIRELESS PACKAGE
-/system package disable wireless
-/file remove wireless.npk
+## REBOOT
 /system reboot
-
-
-## FULL FIRMWARE UPDATE
-/system package update set channel=stable
-/system package update check-for-updates
-/system package update download
-/system reboot
-
 
 ## PASTE THESE COMMANDS TO COMPLETE PROVISIONING
 /interface bridge
 set bridge protocol-mode=rstp priority=0x3000 port-cost-mode=long
+/interface ethernet set [find] loop-protect=yes
 /interface wifi datapath
 add bridge=bridge client-isolation=no disabled=no name=flat_datapath
 /interface wifi configuration
 add channel.reselect-interval=45m..1h30m .skip-dfs-channels=10min-cac country=\
     "United States" datapath=flat_datapath disabled=no mode=ap \
     multicast-enhance=enabled name={ssid} security.authentication-types=\
-    wpa2-psk .encryption=ccmp,gcmp,ccmp-256,gcmp-256 .passphrase="{passphrase}" .ft=no \
+    wpa2-psk .encryption=ccmp .passphrase="{passphrase}" .ft=no \
     .ft-mobility-domain=0xB33F .ft-over-ds=yes .group-key-update=2h ssid=\
     {ssid} station-roaming=yes steering.rrm=yes .wnm=yes
 /interface wifi capsman
@@ -264,22 +263,12 @@ add action=create-dynamic-enabled comment=2ghz disabled=no \
 
 def upgrade_wap():
     # Script 4: mikconfig-upgradewap.py
-    config = """## UNINSTALL WIRELESS PACKAGE
-/system package disable wireless
-/file remove wireless.npk
-/system reboot
+    config = """## DO THROUGH GUI
+# full firmware update (automatic reboot)
+# mark wireless package for uninstall
+# drag qcom-wifi-ac package into files
 
-## FULL FIRMWARE UPDATE
-/system package update set channel=stable
-/system package update check-for-updates
-/system package update download
-/system reboot
-
-## INSTALL WIFI-QCOM-AC PACKAGE
-/system package update set show-all=yes
-/system package update check-for-updates
-/system package update download
-/system package enable wifi-qcom-ac
+## REBOOT
 /system reboot
 
 ## PASTE THESE COMMANDS TO COMPLETE PROVISIONING
@@ -292,6 +281,7 @@ add bridge=bridgeLocal interface=wifi1
 add bridge=bridgeLocal interface=wifi2
 /interface bridge
 set bridgeLocal protocol-mode=rstp priority=0x8000 port-cost-mode=long
+/interface ethernet set [find] loop-protect=yes
 """
     print("\n" + "="*60)
     print("MikroTik wAP AC (CAPsMAN 2.0) upgrade config")
