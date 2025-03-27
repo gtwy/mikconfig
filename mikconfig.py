@@ -284,7 +284,8 @@ add bridge=bridgeLocal interface=wifi1
 add bridge=bridgeLocal interface=wifi2
 /interface bridge
 set bridgeLocal protocol-mode=rstp priority=0x8000 port-cost-mode=long
-/interface ethernet set [find] loop-protect=yes
+/interface ethernet
+set [ find ] loop-protect=on
 """
     print("\n" + "="*60)
     print("MikroTik wAP AC (CAPsMAN 2.0) upgrade config")
