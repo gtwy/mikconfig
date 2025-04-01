@@ -108,8 +108,8 @@ add bridge=bridge client-isolation=no disabled=no name=flat_datapath
 add channel.reselect-interval=45m..1h30m .skip-dfs-channels=10min-cac \\
     country="United States" datapath=flat_datapath disabled=no mode=ap \\
     multicast-enhance=enabled name={ssid} \\
-    security.authentication-types=wpa2-psk,wpa3-psk .encryption=\\
-    ccmp,gcmp,ccmp-256,gcmp-256 .passphrase="{passphrase}" .ft=yes \\
+    security.authentication-types=wpa2-psk,wpa3-psk .encryption=ccmp \\
+    .passphrase="{passphrase}" .ft=yes \\
     .ft-mobility-domain=0xB33F .ft-over-ds=yes .group-key-update=2h \\
     steering.rrm=yes .wnm=yes ssid={ssid} station-roaming=yes
 
