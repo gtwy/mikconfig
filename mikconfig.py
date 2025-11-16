@@ -105,12 +105,12 @@ add address=3.opnsense.pool.ntp.org
 add bridge=bridge client-isolation=no disabled=no name=flat_datapath
 
 /interface wifi configuration
-add channel.reselect-interval=45m..1h30m .skip-dfs-channels=10min-cac \\
+add channel.reselect-interval=1d..2d .skip-dfs-channels=10min-cac \\
     country="United States" datapath=flat_datapath disabled=no mode=ap \\
     multicast-enhance=enabled name={ssid} \\
     security.authentication-types=wpa2-psk,wpa3-psk .encryption=ccmp \\
     .passphrase="{passphrase}" .ft=yes \\
-    .ft-mobility-domain=0xB33F .ft-over-ds=yes .group-key-update=2h \\
+    .ft-mobility-domain=0xBEEF .ft-over-ds=no .group-key-update=2h \\
     steering.rrm=yes .wnm=yes ssid={ssid} station-roaming=yes
 
 /interface wifi provisioning
@@ -233,11 +233,11 @@ def upgrade_cap():
 /interface wifi datapath
 add bridge=bridge client-isolation=no disabled=no name=flat_datapath
 /interface wifi configuration
-add channel.reselect-interval=45m..1h30m .skip-dfs-channels=10min-cac country=\
+add channel.reselect-interval=1d..2d .skip-dfs-channels=10min-cac country=\
     "United States" datapath=flat_datapath disabled=no mode=ap \
     multicast-enhance=enabled name={ssid} security.authentication-types=\
-    wpa2-psk .encryption=ccmp .passphrase="{passphrase}" .ft=no \
-    .ft-mobility-domain=0xB33F .ft-over-ds=yes .group-key-update=2h ssid=\
+    wpa2-psk,wpa3-psk .encryption=ccmp .passphrase="{passphrase}" .ft=yes \
+    .ft-mobility-domain=0xBEEF .ft-over-ds=no .group-key-update=2h ssid=\
     {ssid} station-roaming=yes steering.rrm=yes .wnm=yes
 /interface wifi capsman
 set ca-certificate=auto certificate=auto enabled=yes interfaces=all \
